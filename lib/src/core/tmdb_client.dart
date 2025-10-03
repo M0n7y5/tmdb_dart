@@ -11,6 +11,7 @@ import '../services/tv_service.dart';
 class TmdbClient {
   final String _apiKey;
   final String _baseUrl;
+  final String? _cachePath;
   late final ApiClient _apiClient;
 
   // Service instances
@@ -24,11 +25,14 @@ class TmdbClient {
   ///
   /// [apiKey] is the Bearer token for authentication
   /// [baseUrl] is optional, defaults to TMDB API v3 base URL
+  /// [cachePath] is optional path for cache storage. If null, caching is disabled
   TmdbClient({
     required String apiKey,
     String baseUrl = 'https://api.themoviedb.org/3/',
+    String? cachePath,
   })  : _apiKey = apiKey,
-        _baseUrl = baseUrl {
+        _baseUrl = baseUrl,
+        _cachePath = cachePath {
     _initializeClient();
   }
 
@@ -36,6 +40,7 @@ class TmdbClient {
     _apiClient = ApiClient(
       apiKey: _apiKey,
       baseUrl: _baseUrl,
+      cachePath: _cachePath,
     );
   }
 

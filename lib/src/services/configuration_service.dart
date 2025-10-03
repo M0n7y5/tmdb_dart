@@ -60,14 +60,19 @@ class ConfigurationService {
   ///
   /// Throws an [ApiException] if the request fails
   Future<List<Country>> getCountries() async {
-    final response = await _apiClient.get('/configuration/countries');
+    final response = await _apiClient.getDynamic('/configuration/countries');
 
-    // The response is a Map, but we need to extract the list of countries
-    // Since the API returns a list directly, we need to handle this case
-    // If it's a map, try to find a list in it
-    for (final value in response.values) {
-      if (value is List) {
-        return value.map((country) => Country.fromJson(country)).toList();
+    // The response is a List directly, not a Map
+    if (response is List) {
+      return response.map((country) => Country.fromJson(country)).toList();
+    }
+
+    // If it's a Map, try to find a list in it (fallback for older API versions)
+    if (response is Map) {
+      for (final value in response.values) {
+        if (value is List) {
+          return value.map((country) => Country.fromJson(country)).toList();
+        }
       }
     }
 
@@ -81,14 +86,19 @@ class ConfigurationService {
   ///
   /// Throws an [ApiException] if the request fails
   Future<List<Language>> getLanguages() async {
-    final response = await _apiClient.get('/configuration/languages');
+    final response = await _apiClient.getDynamic('/configuration/languages');
 
-    // The response is a Map, but we need to extract the list of languages
-    // Since the API returns a list directly, we need to handle this case
-    // If it's a map, try to find a list in it
-    for (final value in response.values) {
-      if (value is List) {
-        return value.map((language) => Language.fromJson(language)).toList();
+    // The response is a List directly, not a Map
+    if (response is List) {
+      return response.map((language) => Language.fromJson(language)).toList();
+    }
+
+    // If it's a Map, try to find a list in it (fallback for older API versions)
+    if (response is Map) {
+      for (final value in response.values) {
+        if (value is List) {
+          return value.map((language) => Language.fromJson(language)).toList();
+        }
       }
     }
 
@@ -102,14 +112,27 @@ class ConfigurationService {
   ///
   /// Throws an [ApiException] if the request fails
   Future<List<String>> getJobs() async {
-    final response = await _apiClient.get('/configuration/jobs');
+    final response = await _apiClient.getDynamic('/configuration/jobs');
 
-    // The response is a Map, but we need to extract the list of jobs
-    // Since the API returns a list directly, we need to handle this case
-    // If it's a map, try to find a list in it
-    for (final value in response.values) {
-      if (value is List) {
-        return value.map((job) => job.toString()).toList();
+    // The response is a List directly, not a Map
+    if (response is List) {
+      // Extract job names from the structured response
+      final List<String> jobs = [];
+      for (final item in response) {
+        if (item is Map && item.containsKey('jobs')) {
+          final jobList = item['jobs'] as List;
+          jobs.addAll(jobList.map((job) => job.toString()));
+        }
+      }
+      return jobs;
+    }
+
+    // If it's a Map, try to find a list in it (fallback for older API versions)
+    if (response is Map) {
+      for (final value in response.values) {
+        if (value is List) {
+          return value.map((job) => job.toString()).toList();
+        }
       }
     }
 
@@ -123,28 +146,43 @@ class ConfigurationService {
   ///
   /// Throws an [ApiException] if the request fails
   Future<List<String>> getTimezones() async {
-    final response = await _apiClient.get('/configuration/timezones');
+    final response = await _apiClient.getDynamic('/configuration/timezones');
 
-    // The response is a nested structure, we need to extract all timezones
-    final List<String> timezones = [];
+    // The response is a List directly, not a Map
+    if (response is List) {
+      final List<String> timezones = [];
+      for (final item in response) {
+        if (item is Map && item.containsKey('zones')) {
+          final zoneList = item['zones'] as List;
+          timezones.addAll(zoneList.map((zone) => zone.toString()));
+        }
+      }
+      return timezones;
+    }
 
-    for (final value in response.values) {
-      if (value is List) {
-        for (final country in value) {
-          if (country is Map<String, dynamic>) {
-            for (final entry in country.values) {
-              if (entry is List) {
-                for (final timezone in entry) {
-                  timezones.add(timezone.toString());
+    // If it's a Map, try to find a list in it (fallback for older API versions)
+    if (response is Map) {
+      final List<String> timezones = [];
+      for (final value in response.values) {
+        if (value is List) {
+          for (final country in value) {
+            if (country is Map<String, dynamic>) {
+              for (final entry in country.values) {
+                if (entry is List) {
+                  for (final timezone in entry) {
+                    timezones.add(timezone.toString());
+                  }
                 }
               }
             }
           }
         }
       }
+      return timezones;
     }
 
-    return timezones;
+    // If we can't find a list, return an empty list
+    return [];
   }
 
   /// Gets the list of primary translations
@@ -154,14 +192,19 @@ class ConfigurationService {
   /// Throws an [ApiException] if the request fails
   Future<List<String>> getPrimaryTranslations() async {
     final response =
-        await _apiClient.get('/configuration/primary_translations');
+        await _apiClient.getDynamic('/configuration/primary_translations');
 
-    // The response is a Map, but we need to extract the list of translations
-    // Since the API returns a list directly, we need to handle this case
-    // If it's a map, try to find a list in it
-    for (final value in response.values) {
-      if (value is List) {
-        return value.map((translation) => translation.toString()).toList();
+    // The response is a List directly, not a Map
+    if (response is List) {
+      return response.map((translation) => translation.toString()).toList();
+    }
+
+    // If it's a Map, try to find a list in it (fallback for older API versions)
+    if (response is Map) {
+      for (final value in response.values) {
+        if (value is List) {
+          return value.map((translation) => translation.toString()).toList();
+        }
       }
     }
 

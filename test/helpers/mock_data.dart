@@ -8,7 +8,6 @@ import 'package:tmdb_dart/src/models/common/genre.dart';
 import 'package:tmdb_dart/src/models/common/production_company.dart';
 import 'package:tmdb_dart/src/models/common/production_country.dart';
 import 'package:tmdb_dart/src/models/common/spoken_language.dart';
-import 'package:tmdb_dart/src/models/tv/tv_show.dart' show Network, Creator;
 
 /// Helper class providing mock data builders for testing
 class MockData {

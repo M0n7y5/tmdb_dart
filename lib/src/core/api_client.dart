@@ -11,16 +11,20 @@ class ApiClient {
   late final Dio _dio;
   final String _baseUrl;
   final String _apiKey;
+  final String? _cachePath;
 
   /// Creates a new API client instance
   ///
   /// [apiKey] is the Bearer token for authentication
   /// [baseUrl] is the base URL for the TMDB API
+  /// [cachePath] is optional path for cache storage. If null, caching is disabled
   ApiClient({
     required String apiKey,
     required String baseUrl,
+    String? cachePath,
   })  : _apiKey = apiKey,
-        _baseUrl = baseUrl {
+        _baseUrl = baseUrl,
+        _cachePath = cachePath {
     _initializeDio();
   }
 
@@ -46,7 +50,7 @@ class ApiClient {
       ),
     );
 
-    // Add caching interceptor (only if path_provider is available)
+    // Add caching interceptor if cachePath is provided
     _initializeCache();
 
     // Add error handling interceptor
@@ -63,58 +67,30 @@ class ApiClient {
     );
   }
 
-  Future<void> _initializeCache() async {
+  void _initializeCache() {
     try {
-      // Try to import path_provider only if available
-      // This allows the library to work in non-Flutter environments
-      final useCache = await _canUsePathProvider();
+      // Only initialize cache if cachePath is provided
+      if (_cachePath != null) {
+        final cacheStore = HiveCacheStore(_cachePath!);
 
-      if (useCache) {
-        // Use dynamic import to avoid compile-time dependency
-        final pathProvider = await _importPathProvider();
-        if (pathProvider != null) {
-          final appDocDir =
-              await pathProvider.getApplicationDocumentsDirectory();
-          final cacheStore = HiveCacheStore('${appDocDir.path}/tmdb_cache');
-
-          _dio.interceptors.add(
-            DioCacheInterceptor(
-              options: CacheOptions(
-                store: cacheStore,
-                policy: CachePolicy.request,
-                hitCacheOnErrorExcept: [401, 403],
-                maxStale: const Duration(days: 7),
-                priority: CachePriority.high,
-                cipher: null,
-                keyBuilder: CacheOptions.defaultCacheKeyBuilder,
-                allowPostMethod: false,
-              ),
+        _dio.interceptors.add(
+          DioCacheInterceptor(
+            options: CacheOptions(
+              store: cacheStore,
+              policy: CachePolicy.request,
+              hitCacheOnErrorExcept: [401, 403],
+              maxStale: const Duration(days: 7),
+              priority: CachePriority.high,
+              cipher: null,
+              keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+              allowPostMethod: false,
             ),
-          );
-        }
+          ),
+        );
       }
     } catch (e) {
       // Cache initialization failed, continue without caching
       print('Failed to initialize cache: $e');
-    }
-  }
-
-  Future<bool> _canUsePathProvider() async {
-    try {
-      // Check if we're in a Flutter environment
-      return Platform.isIOS || Platform.isAndroid;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<dynamic> _importPathProvider() async {
-    try {
-      // This would normally be done with conditional imports
-      // For now, we'll just return null to disable caching in non-Flutter environments
-      return null;
-    } catch (e) {
-      return null;
     }
   }
 
@@ -171,6 +147,24 @@ class ApiClient {
         options: options,
       );
       return response.data ?? {};
+    } on DioException catch (e) {
+      throw e.error ?? TmdbNetworkException('Unknown error occurred');
+    }
+  }
+
+  /// Performs a GET request that can return either a Map or a List
+  Future<dynamic> getDynamic(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      final response = await _dio.get<dynamic>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data;
     } on DioException catch (e) {
       throw e.error ?? TmdbNetworkException('Unknown error occurred');
     }
