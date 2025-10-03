@@ -7,6 +7,7 @@ A comprehensive Dart client library for The Movie Database (TMDB) API, providing
 - ✅ **Type-safe models** with JSON serialization
 - ✅ **Comprehensive API coverage** for movies, TV shows, people, search, and configuration
 - ✅ **Modern Dart** with null safety
+- ✅ **Optional caching** with configurable cache path
 - ✅ **Pagination helpers** for easy navigation through large result sets
 - ✅ **Image URL building** utilities for constructing image URLs
 - ✅ **Query parameter builders** for consistent API requests
@@ -47,6 +48,10 @@ void main() async {
   // Initialize the client
   final tmdb = TmdbClient(
     apiKey: 'YOUR_API_KEY', // Use your actual API key here
+    // Optional: Provide a custom base URL (defaults to TMDB API v3)
+    baseUrl: 'https://api.themoviedb.org/3/',
+    // Optional: Provide a cache path to enable caching
+    cachePath: '/path/to/cache/directory', // If null, caching is disabled
   );
 
   try {
@@ -418,6 +423,56 @@ print('Fetched ${allMovies.length} movies');
 ```
 
 ## Advanced Usage
+
+### Custom API URL
+
+You can use a custom API URL if needed, for example when working with a proxy or a different API endpoint:
+
+```dart
+// Use a custom base URL
+final tmdb = TmdbClient(
+  apiKey: 'YOUR_API_KEY',
+  baseUrl: 'https://your-proxy-server.com/tmdb-api/',
+  cachePath: '/path/to/cache/directory',
+);
+
+// Use a different TMDB API version
+final tmdbV4 = TmdbClient(
+  apiKey: 'YOUR_API_KEY',
+  baseUrl: 'https://api.themoviedb.org/4/',
+);
+```
+
+### Caching
+
+The library supports optional HTTP response caching to improve performance and reduce API calls:
+
+```dart
+// Initialize client with caching enabled
+final tmdb = TmdbClient(
+  apiKey: 'YOUR_API_KEY',
+  cachePath: '/path/to/cache/directory', // Provide a valid path
+);
+
+// Initialize client without caching (default behavior)
+final tmdbNoCache = TmdbClient(
+  apiKey: 'YOUR_API_KEY',
+  // cachePath is null by default, so caching is disabled
+);
+```
+
+**Cache Configuration:**
+- Cache is stored using Hive database for efficient retrieval
+- Cached responses are valid for 7 days by default
+- Cache respects cache-control headers from the API
+- Failed requests (except 401, 403) will serve cached content if available
+- Only GET requests are cached by default
+
+**Cache Path Requirements:**
+- Must be a valid directory path where the application has read/write permissions
+- The directory will be created if it doesn't exist
+- In Flutter apps, you might use `path_provider` to get a suitable directory
+- In server-side Dart applications, you can use any directory path
 
 ### Custom Query Parameters
 
