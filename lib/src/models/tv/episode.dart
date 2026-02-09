@@ -78,8 +78,24 @@ class Episode {
   });
 
   /// Creates a [Episode] from JSON
-  factory Episode.fromJson(Map<String, dynamic> json) =>
-      _$EpisodeFromJson(json);
+  factory Episode.fromJson(Map<String, dynamic> json) {
+    return Episode(
+      id: _intFromJson(json['id']),
+      episodeNumber: _intFromJson(json['episode_number']),
+      seasonNumber: _intFromJson(json['season_number']),
+      name: _stringFromJson(json['name']),
+      overview: _stringFromJson(json['overview']),
+      airDate: _dateTimeFromJson(json['air_date'] as String?),
+      runtime: _nullableIntFromJson(json['runtime']),
+      stillPath: json['still_path'] as String?,
+      voteAverage: _doubleFromJson(json['vote_average']),
+      voteCount: _intFromJson(json['vote_count']),
+      productionCode: json['production_code'] as String?,
+      showId: _intFromJson(json['show_id']),
+      crew: _crewFromJson(json['crew']),
+      guestStars: _guestStarsFromJson(json['guest_stars']),
+    );
+  }
 
   /// Converts this [Episode] to JSON
   Map<String, dynamic> toJson() => _$EpisodeToJson(this);
@@ -90,4 +106,86 @@ class Episode {
 
   /// Converts a DateTime to ISO 8601 string or returns null
   static String? _dateTimeToJson(DateTime? date) => date?.toIso8601String();
+
+  static int _intFromJson(dynamic value) {
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+    return 0;
+  }
+
+  static int? _nullableIntFromJson(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  static double _doubleFromJson(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  static String _stringFromJson(dynamic value) {
+    if (value is String) {
+      return value;
+    }
+    return '';
+  }
+
+  static List<Crew>? _crewFromJson(dynamic value) {
+    if (value is! List) {
+      return null;
+    }
+
+    final crew = <Crew>[];
+    for (final item in value) {
+      if (item is! Map) {
+        continue;
+      }
+
+      try {
+        crew.add(Crew.fromJson(Map<String, dynamic>.from(item)));
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return crew;
+  }
+
+  static List<Cast>? _guestStarsFromJson(dynamic value) {
+    if (value is! List) {
+      return null;
+    }
+
+    final cast = <Cast>[];
+    for (final item in value) {
+      if (item is! Map) {
+        continue;
+      }
+
+      try {
+        cast.add(Cast.fromJson(Map<String, dynamic>.from(item)));
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return cast;
+  }
 }

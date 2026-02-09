@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
@@ -12,6 +11,10 @@ class ApiClient {
   final String _baseUrl;
   final String _apiKey;
   final String? _cachePath;
+  final bool _enableLogging;
+  final bool _logRequestBody;
+  final bool _logResponseBody;
+  final void Function(Object message)? _logger;
 
   /// Creates a new API client instance
   ///
@@ -22,9 +25,17 @@ class ApiClient {
     required String apiKey,
     required String baseUrl,
     String? cachePath,
+    bool enableLogging = false,
+    bool logRequestBody = false,
+    bool logResponseBody = false,
+    void Function(Object message)? logger,
   })  : _apiKey = apiKey,
         _baseUrl = baseUrl,
-        _cachePath = cachePath {
+        _cachePath = cachePath,
+        _enableLogging = enableLogging,
+        _logRequestBody = logRequestBody,
+        _logResponseBody = logResponseBody,
+        _logger = logger {
     _initializeDio();
   }
 
@@ -41,14 +52,21 @@ class ApiClient {
       sendTimeout: const Duration(seconds: 30),
     ));
 
-    // Add interceptors
-    _dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        logPrint: (object) => print(object.toString()),
-      ),
-    );
+    if (_enableLogging) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: _logRequestBody,
+          responseBody: _logResponseBody,
+          logPrint: (object) {
+            if (_logger != null) {
+              _logger!(object);
+            } else {
+              print(object.toString());
+            }
+          },
+        ),
+      );
+    }
 
     // Add caching interceptor if cachePath is provided
     _initializeCache();
@@ -90,7 +108,14 @@ class ApiClient {
       }
     } catch (e) {
       // Cache initialization failed, continue without caching
-      print('Failed to initialize cache: $e');
+      if (_enableLogging) {
+        final message = 'Failed to initialize cache: $e';
+        if (_logger != null) {
+          _logger!(message);
+        } else {
+          print(message);
+        }
+      }
     }
   }
 

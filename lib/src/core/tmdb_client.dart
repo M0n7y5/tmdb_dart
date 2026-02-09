@@ -12,6 +12,10 @@ class TmdbClient {
   final String _apiKey;
   final String _baseUrl;
   final String? _cachePath;
+  final bool _enableLogging;
+  final bool _logRequestBody;
+  final bool _logResponseBody;
+  final void Function(Object message)? _logger;
   late final ApiClient _apiClient;
 
   // Service instances
@@ -30,9 +34,17 @@ class TmdbClient {
     required String apiKey,
     String baseUrl = 'https://api.themoviedb.org/3/',
     String? cachePath,
+    bool enableLogging = false,
+    bool logRequestBody = false,
+    bool logResponseBody = false,
+    void Function(Object message)? logger,
   })  : _apiKey = apiKey,
         _baseUrl = baseUrl,
-        _cachePath = cachePath {
+        _cachePath = cachePath,
+        _enableLogging = enableLogging,
+        _logRequestBody = logRequestBody,
+        _logResponseBody = logResponseBody,
+        _logger = logger {
     _initializeClient();
   }
 
@@ -41,6 +53,10 @@ class TmdbClient {
       apiKey: _apiKey,
       baseUrl: _baseUrl,
       cachePath: _cachePath,
+      enableLogging: _enableLogging,
+      logRequestBody: _logRequestBody,
+      logResponseBody: _logResponseBody,
+      logger: _logger,
     );
   }
 

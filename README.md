@@ -52,6 +52,11 @@ void main() async {
     baseUrl: 'https://api.themoviedb.org/3/',
     // Optional: Provide a cache path to enable caching
     cachePath: '/path/to/cache/directory', // If null, caching is disabled
+    // Optional: Enable HTTP logging when debugging
+    enableLogging: false,
+    // Optional: Include request/response bodies in logs (only if enableLogging is true)
+    logRequestBody: false,
+    logResponseBody: false,
   );
 
   try {
