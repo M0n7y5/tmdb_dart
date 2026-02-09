@@ -6,7 +6,6 @@ library;
 
 import 'dart:io';
 import 'package:tmdb_dart/tmdb_dart.dart';
-import 'package:test/test.dart';
 
 /// Configuration class for integration tests.
 ///

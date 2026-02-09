@@ -46,8 +46,9 @@ class SearchService {
     );
 
     if (year != null) params['year'] = year.toString();
-    if (primaryReleaseYear != null)
+    if (primaryReleaseYear != null) {
       params['primary_release_year'] = primaryReleaseYear.toString();
+    }
 
     final response = await _apiClient.get(
       '/search/movie',
@@ -83,8 +84,9 @@ class SearchService {
       includeAdult: includeAdult,
     );
 
-    if (firstAirDateYear != null)
+    if (firstAirDateYear != null) {
       params['first_air_date_year'] = firstAirDateYear.toString();
+    }
 
     final response = await _apiClient.get(
       '/search/tv',
